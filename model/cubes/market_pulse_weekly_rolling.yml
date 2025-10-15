@@ -1,6 +1,6 @@
 cubes:
   - name: market_pulse_weekly_rolling
-    sql_table: dev.derived.mv_market_pulse_weekly_vup_dist_topic_sort # Materialized View
+    sql_table: dev.derived.mv_market_pulse_weekly # Optimized Materialized View
 
     joins:
       - name: universal_person

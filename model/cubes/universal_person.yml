@@ -6,6 +6,19 @@ cubes:
       - name: universal_job
         relationship: one_to_many
         sql: "{CUBE}.vup_id = {universal_job}.vup_id"
+      
+      # ENG-1914: Junction table joins for many-to-many identifier relationships
+      - name: vup_linkedin_urls
+        relationship: one_to_many
+        sql: "{CUBE}.vup_id = {vup_linkedin_urls}.vup_id"
+      
+      - name: vup_fbf_ids
+        relationship: one_to_many
+        sql: "{CUBE}.vup_id = {vup_fbf_ids}.vup_id"
+      
+      - name: vup_pdl_ids
+        relationship: one_to_many
+        sql: "{CUBE}.vup_id = {vup_pdl_ids}.vup_id"
 
     dimensions:
       - name: id
@@ -13,14 +26,30 @@ cubes:
         type: string
         primary_key: true
         public: true
+      
+      # ENG-1914: Merge tracking dimension
+      - name: merged_into_vup_id
+        sql: merged_into_vup_id
+        type: string
+        description: "If not null, this person was merged into another record"
+      
+      # ENG-1914: Active person indicator (calculated dimension)
+      - name: is_active
+        sql: "CASE WHEN {CUBE}.merged_into_vup_id IS NULL THEN 'Yes' ELSE 'No' END"
+        type: string
+        description: "Whether this is an active person record (not merged)"
 
+      # DEPRECATED: Use junction tables instead (vup_fbf_ids, vup_pdl_ids, vup_linkedin_urls)
       - name: fbf_id
         sql: fbf_id
         type: string
+        description: "DEPRECATED: Use vup_fbf_ids junction table for many-to-many relationship"
 
+      # DEPRECATED: Use junction tables instead
       - name: pdl_id
         sql: pdl_id
         type: string
+        description: "DEPRECATED: Use vup_pdl_ids junction table for many-to-many relationship"
 
       - name: first_name
         sql: first_name
@@ -30,9 +59,11 @@ cubes:
         sql: last_name
         type: string
 
+      # DEPRECATED: Use junction tables instead
       - name: linkedin_url
         sql: linkedin_url
         type: string
+        description: "DEPRECATED: Use vup_linkedin_urls junction table for many-to-many relationship"
 
       - name: street_address
         sql: street_address
@@ -83,3 +114,20 @@ cubes:
         type: count_distinct
         description: "Total number of distinct people"
         sql: vup_id
+      
+      # ENG-1914: Deduplication measures
+      - name: active_count
+        type: count_distinct
+        sql: "CASE WHEN {CUBE}.merged_into_vup_id IS NULL THEN {CUBE}.vup_id END"
+        description: "Count of active persons (excluding merged records)"
+      
+      - name: merged_count
+        type: count_distinct
+        sql: "CASE WHEN {CUBE}.merged_into_vup_id IS NOT NULL THEN {CUBE}.vup_id END"
+        description: "Count of persons that were merged into other records"
+    
+    # ENG-1914: Active persons segment
+    segments:
+      - name: active_persons
+        sql: "{CUBE}.merged_into_vup_id IS NULL"
+        description: "Filter to only active person records (not merged)"

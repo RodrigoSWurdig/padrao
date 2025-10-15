@@ -1,0 +1,19 @@
+CREATE MATERIALIZED VIEW derived.mv_market_pulse_weekly
+DISTKEY
+  (topic_id)
+SORTKEY
+  (topic_id, freq DESC) AS (
+    SELECT
+      vup_id,
+      topic_id,
+      SUM(daily.freq) AS freq
+    FROM
+      derived.mv_market_pulse_daily daily
+    WHERE
+      -- Previous week with 2-day buffer for data processing latency
+      daily.created_at >= CURRENT_DATE - INTERVAL '9 days'
+      AND daily.created_at < CURRENT_DATE - INTERVAL '2 days'
+    GROUP BY
+      daily.vup_id,
+      daily.topic_id
+  );
