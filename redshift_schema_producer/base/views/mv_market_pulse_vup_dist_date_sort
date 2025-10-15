@@ -1,0 +1,19 @@
+CREATE MATERIALIZED VIEW base.mv_market_pulse_vup_dist_date_sort
+DISTKEY
+  (vup_id)
+SORTKEY
+  (created_at, topic_id) AS (
+    SELECT
+      mp._col_0 AS hem,
+      mp._col_1 AS fbf_id,
+      mp._col_2 AS topic_id,
+      mp.dt AS created_at,
+      fbf_to_vup.vup_id as vup_id
+    FROM
+      "raw".market_pulse_2 AS mp
+      JOIN derived.mv_fbf_to_vup fbf_to_vup ON fbf_to_vup.fbf_id = mp._col_1
+    WHERE
+      mp._col_1 IS NOT NULL
+      -- Maintain historical data for backfills, Redshift will handle incremental refresh
+      AND mp.dt >= '2025-07-20'
+  );

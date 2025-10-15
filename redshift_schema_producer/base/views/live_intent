@@ -1,0 +1,29 @@
+CREATE
+OR REPLACE VIEW "dev"."base".live_intent AS WITH latest_partition AS (
+    SELECT
+        year,
+        month,
+        day
+    FROM
+        "dev"."raw".live_intent
+    ORDER BY
+        year DESC,
+        month DESC,
+        day DESC
+    LIMIT
+        1
+)
+SELECT
+    a.col0 as email,
+    a.col1 as md5,
+    a.col2 as sha1,
+    a.col3 as sha256,
+    'live-intent' as dataset,
+    a.year || '-' || a.month || '-' || a.day as dataset_version
+FROM
+    "dev"."raw".live_intent a,
+    latest_partition b
+WHERE
+    a.year = b.year
+    AND a.month = b.month
+    AND a.day = b.day WITH NO SCHEMA BINDING;

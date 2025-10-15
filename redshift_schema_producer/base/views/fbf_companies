@@ -1,0 +1,87 @@
+CREATE
+OR REPLACE VIEW "dev"."base".fbf_companies AS WITH latest_firm_partition AS (
+    SELECT
+        year,
+        month
+    FROM
+        "dev"."raw".firmographic
+    ORDER BY
+        year DESC,
+        month DESC
+    LIMIT
+        1
+), latest_mappings_partition AS (
+    SELECT
+        year,
+        month
+    FROM
+        "dev"."raw".mappings
+    ORDER BY
+        year DESC,
+        month DESC
+    LIMIT
+        1
+), latest_industry_mappings AS (
+    SELECT
+        LOWER(source_value) as source_value,
+        vector_value
+    FROM
+        "dev"."raw".mappings m,
+        latest_mappings_partition p
+    WHERE
+        m.year = p.year
+        AND m.month = p.month
+        AND source_key = 'PRIMARY_INDUSTRY'
+        AND data_source = '5x5'
+),
+latest_employee_mappings AS (
+    SELECT
+        LOWER(source_value) as source_value,
+        vector_value
+    FROM
+        "dev"."raw".mappings m,
+        latest_mappings_partition p
+    WHERE
+        m.year = p.year
+        AND m.month = p.month
+        AND source_key = 'COMPANY_EMPLOYEE_COUNT'
+        AND data_source = '5x5'
+)
+SELECT
+    NULLIF(LOWER(company_name), '') as name,
+    NULLIF(LOWER(company_domain), '') as domain,
+    CASE
+    WHEN company_phone = '' THEN NULL
+    ELSE SPLIT_TO_ARRAY(company_phone, ',') END as phone,
+    NULLIF(company_sic, '') as sic,
+    NULLIF(company_naics, '') as naics,
+    NULLIF(LOWER(company_address), '') as street_address,
+    NULLIF(LOWER(company_address_2), '') as address_line_2,
+    NULLIF(LOWER(company_city), '') as locality,
+    NULLIF(LOWER(company_state), '') as
+region
+,
+    NULLIF(company_zip, '') as zip,
+    NULLIF(company_linkedin_url, '') as linkedin_url,
+    NULLIF(LOWER(company_revenue), '') as revenue,
+    NULLIF(
+        COALESCE(
+            LOWER(em.vector_value),
+            LOWER(f.company_employee_count)
+        ),
+        ''
+    ) as employee_count,
+    NULLIF(
+        COALESCE(LOWER(im.vector_value), LOWER(f.primary_industry)),
+        ''
+    ) as industry,
+    NULLIF(cc_id, '') as id,
+    NULLIF(LOWER(company_description), '') as description,
+    NULLIF(LOWER(related_domains), '') as related_domains,
+    f.year || '-' || f.month as dataset_version
+FROM
+    "dev"."raw".firmographic f
+    JOIN latest_firm_partition fp ON f.year = fp.year
+    AND f.month = fp.month
+    LEFT JOIN latest_industry_mappings im ON LOWER(f.primary_industry) = im.source_value
+    LEFT JOIN latest_employee_mappings em ON LOWER(f.company_employee_count) = em.source_value WITH NO SCHEMA BINDING;

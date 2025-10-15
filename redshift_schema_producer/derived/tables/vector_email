@@ -1,0 +1,12 @@
+CREATE TABLE derived.vector_email (
+    vup_id character varying(32) ENCODE lzo,
+    sha256 character varying(256) NOT NULL ENCODE lzo
+    distkey
+,
+        email character varying(1024) ENCODE lzo,
+        email_type character varying(32) ENCODE lzo,
+        data_source character varying(32) ENCODE lzo,
+        dataset_version character varying(32) ENCODE lzo
+) DISTSTYLE KEY
+SORTKEY
+    (vup_id);

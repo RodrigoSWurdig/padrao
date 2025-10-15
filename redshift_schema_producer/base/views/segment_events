@@ -1,0 +1,5 @@
+CREATE MATERIALIZED VIEW base.segment_events AUTO REFRESH YES AS
+SELECT
+    *
+FROM
+    vectordb.public.segment_events;

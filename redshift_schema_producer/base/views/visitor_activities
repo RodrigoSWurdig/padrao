@@ -1,0 +1,19 @@
+CREATE MATERIALIZED VIEW base.visitor_activities AUTO REFRESH YES AS
+SELECT
+    id,
+    page_url,
+    page_title,
+    created_at,
+    visitor_uuid,
+    page_path,
+    utm_source,
+    utm_medium,
+    utm_campaign,
+    utm_term,
+    utm_content,
+    org,
+    referrer,
+    ip_info,
+    user_agent
+FROM
+    "vectordb"."public"."visitor_activities";

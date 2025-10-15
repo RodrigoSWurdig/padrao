@@ -1,0 +1,85 @@
+cubes:
+  - name: universal_person
+    sql_table: core.derived.vector_universal_person # Table
+
+    joins:
+      - name: universal_job
+        relationship: one_to_many
+        sql: "{CUBE}.vup_id = {universal_job}.vup_id"
+
+    dimensions:
+      - name: id
+        sql: vup_id
+        type: string
+        primary_key: true
+        public: true
+
+      - name: fbf_id
+        sql: fbf_id
+        type: string
+
+      - name: pdl_id
+        sql: pdl_id
+        type: string
+
+      - name: first_name
+        sql: first_name
+        type: string
+
+      - name: last_name
+        sql: last_name
+        type: string
+
+      - name: linkedin_url
+        sql: linkedin_url
+        type: string
+
+      - name: street_address
+        sql: street_address
+        type: string
+
+      - name: address_line_2
+        sql: address_line_2
+        type: string
+
+      - name: locality
+        sql: locality
+        type: string
+
+      - name: region
+        sql: region
+        type: string
+
+      - name: country
+        sql: country
+        type: string
+
+      - name: zip
+        sql: zip
+        type: string
+
+      - name: gender
+        sql: gender
+        type: string
+
+      - name: data_source
+        sql: data_source
+        type: string
+
+      - name: dataset_version
+        sql: dataset_version
+        type: string
+
+      - name: created_at
+        sql: created_at
+        type: string
+
+      - name: updated_at
+        sql: updated_at
+        type: string
+
+    measures:
+      - name: count
+        type: count_distinct
+        description: "Total number of distinct people"
+        sql: vup_id

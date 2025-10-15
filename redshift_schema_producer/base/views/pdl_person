@@ -1,0 +1,65 @@
+CREATE
+OR REPLACE VIEW "dev"."base".pdl_person AS WITH latest_partition AS (
+    SELECT
+        year,
+        month
+    FROM
+        "dev"."raw".pdl_person
+    ORDER BY
+        year DESC,
+        month DESC
+    LIMIT
+        1
+)
+SELECT
+    person_id as id,
+    facebook_id,
+    mobile_phone,
+    phone_numbers,
+    github_username,
+    location_locality as locality,
+    location_last_updated,
+    linkedin_username,
+    twitter_username,
+    location_postal_code as zip,
+    last_name,
+    middle_initial,
+    linkedin_id,
+    github_url,
+    location_street_address as street_address,
+    first_name,
+    recommended_personal_email,
+    CASE
+    WHEN sex = 'female' THEN 'f'
+    WHEN sex = 'male' THEN 'm'
+    ELSE '' END as gender,
+    location_address_line_2 as address_line_2,
+    facebook_username,
+    full_name,
+    CASE
+    WHEN location_country = 'united states' THEN 'us'
+    ELSE location_country END as country,
+    street_addresses,
+    twitter_url,
+    location_continent as continent,
+    location_metro as metro,
+    location_geo as geo,
+    middle_name,
+    "dev".base.get_state_abbreviation(location_region) as
+region
+,
+    birth_date,
+    birth_year,
+    linkedin_url,
+    location_name,
+    last_initial,
+    facebook_url,
+    personal_emails,
+    dataset_version,
+    job_last_verified:: TIMESTAMP as job_last_updated
+FROM
+    "dev"."raw".pdl_person a,
+    latest_partition b
+WHERE
+    a.year = b.year
+    AND a.month = b.month WITH NO SCHEMA BINDING;

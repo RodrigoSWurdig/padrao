@@ -1,0 +1,61 @@
+cubes:
+  - name: market_pulse_daily
+    sql_table: dev.derived.mv_market_pulse_daily_vup_dist_date_sort # Materialized View
+
+    joins:
+      - name: universal_person
+        relationship: one_to_many
+        sql: "{CUBE}.vup_id = {universal_person}.id"
+
+    dimensions:
+      - name: pkey
+        sql: "{CUBE}.vup_id || '-' || {CUBE}.topic_id || '-' || {CUBE}.created_at"
+        type: string
+        primary_key: true
+      - name: vup_id
+        sql: vup_id
+        type: string
+        public: true
+      - name: topic_id
+        sql: topic_id
+        type: string
+        public: true
+      - name: created_at
+        sql: created_at
+        type: time
+        public: true
+      - name: freq
+        sql: freq
+        type: number
+        public: true
+
+    measures:
+      - name: total_frequency
+        type: sum
+        sql: freq
+        public: true
+      - name: unique_vup_ids
+        type: count_distinct
+        sql: vup_id
+        public: true
+      - name: unique_topics
+        type: count_distinct
+        sql: topic_id
+        public: true
+      - name: total_records
+        type: count
+        public: true
+
+    # pre_aggregations:
+    #   - name: main
+    #     dimensions:
+    #       - market_pulse_daily.vup_id
+    #       - market_pulse_daily.topic_id
+    #       - market_pulse_daily.created_at
+    #     measures:
+    #       - market_pulse_daily.total_frequency
+    #       - market_pulse_daily.unique_vup_ids
+    #     time_dimension: market_pulse_daily.created_at
+    #     granularity: day
+    #     refresh_key:
+    #       every: "1 hour"

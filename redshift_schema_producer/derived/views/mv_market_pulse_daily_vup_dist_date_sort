@@ -1,0 +1,18 @@
+CREATE MATERIALIZED VIEW derived.mv_market_pulse_daily_vup_dist_date_sort
+DISTKEY
+  (vup_id)
+SORTKEY
+  (created_at, topic_id) AS (
+    SELECT
+      base.created_at,
+      base.topic_id,
+      base.vup_id,
+      COUNT(*) AS freq
+    FROM
+      base.mv_market_pulse_vup_dist_date_sort base -- In theory we could add time limitations here, but because we're already doing so
+      -- in the base view, we want to avoid duplication
+    GROUP BY
+      base.created_at,
+      base.vup_id,
+      base.topic_id
+  );

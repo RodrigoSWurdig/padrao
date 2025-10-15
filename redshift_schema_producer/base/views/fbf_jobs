@@ -1,0 +1,102 @@
+CREATE
+OR REPLACE VIEW "dev"."base".fbf_jobs AS WITH latest_fbf_person_partition AS (
+    SELECT
+        year,
+        month
+    FROM
+        "dev"."raw".universal_person
+    ORDER BY
+        year DESC,
+        month DESC
+    LIMIT
+        1
+), latest_mappings_partition AS (
+    SELECT
+        year,
+        month
+    FROM
+        "dev"."raw".mappings
+    ORDER BY
+        year DESC,
+        month DESC
+    LIMIT
+        1
+), latest_industry_mappings AS (
+    SELECT
+        source_value,
+        vector_value
+    FROM
+        "dev"."raw".mappings m,
+        latest_mappings_partition p
+    WHERE
+        m.year = p.year
+        AND m.month = p.month
+        AND source_key = 'PRIMARY_INDUSTRY'
+        AND data_source = '5x5'
+),
+latest_department_mappings AS (
+    SELECT
+        source_value,
+        vector_value
+    FROM
+        "dev"."raw".mappings m,
+        latest_mappings_partition p
+    WHERE
+        m.year = p.year
+        AND m.month = p.month
+        AND source_key = 'DEPARTMENT'
+        AND data_source = '5x5'
+),
+latest_seniority_mappings AS (
+    SELECT
+        source_value,
+        vector_value
+    FROM
+        "dev"."raw".mappings m,
+        latest_mappings_partition p
+    WHERE
+        m.year = p.year
+        AND m.month = p.month
+        AND source_key = 'SENIORITY_LEVEL_2'
+        AND data_source = '5x5'
+)
+SELECT
+    up_id as id,
+    NULLIF(business_email, ''),
+    NULLIF(programmatic_business_emails, ''),
+    NULLIF(LOWER(job_title), '') as job_title,
+    NULLIF(COALESCE(LOWER(dm.vector_value), f.department), '') as department,
+    NULLIF(LOWER(professional_address), '') as professional_street_address,
+    NULLIF(LOWER(professional_city), '') as professional_locality,
+    NULLIF(LOWER(professional_state), '') as professional_region,
+    NULLIF(LOWER(professional_zip), '') as professional_zip,
+    NULLIF(LOWER(professional_zip4), '') as professional_zip4,
+    NULLIF(
+        COALESCE(LOWER(im.vector_value), f.primary_industry),
+        ''
+    ) as industry,
+    NULLIF(LOWER(business_email_validation_status), '') as business_email_validation_status,
+    NULLIF(business_email_last_seen, NULL),
+    NULLIF(job_title_last_updated, NULL) as job_last_updated,
+    NULLIF(last_updated, NULL),
+    NULLIF(LOWER(work_history), '') as work_history,
+    NULLIF(cc_id, '') as company_id,
+    NULLIF(LOWER(job_title_normalized), '') as job_title_normalized,
+    NULLIF(
+        COALESCE(LOWER(sm.vector_value), f.seniority_level_2),
+        ''
+    ) as seniority,
+    NULLIF(department_2, ''),
+    f.year || '-' || f.month as dataset_version
+FROM
+    "dev"."raw".universal_person f
+    JOIN latest_fbf_person_partition pp ON f.year = pp.year
+    AND f.month = pp.month
+    LEFT JOIN latest_industry_mappings im ON f.primary_industry = im.source_value
+    LEFT JOIN latest_department_mappings dm ON f.department = dm.source_value
+    LEFT JOIN latest_seniority_mappings sm ON f.seniority_level_2 = sm.source_value
+WHERE
+    (
+        job_title != ''
+        OR cc_id != ''
+    ) WITH NO SCHEMA BINDING;

@@ -1,0 +1,83 @@
+CREATE
+OR REPLACE VIEW "dev"."base".pdl_companies AS WITH latest_firm_partition AS (
+    SELECT
+        year,
+        month
+    FROM
+        "dev"."raw".pdl_person
+    ORDER BY
+        year DESC,
+        month DESC
+    LIMIT
+        1
+), latest_mappings_partition AS (
+    SELECT
+        year,
+        month
+    FROM
+        "dev"."raw".mappings
+    ORDER BY
+        year DESC,
+        month DESC
+    LIMIT
+        1
+), latest_industry_mappings AS (
+    SELECT
+        source_value,
+        vector_value
+    FROM
+        "dev"."raw".mappings m,
+        latest_mappings_partition p
+    WHERE
+        m.year = p.year
+        AND m.month = p.month
+        AND source_key = 'industry'
+        AND data_source = 'pdl'
+),
+latest_employee_mappings AS (
+    SELECT
+        source_value,
+        vector_value
+    FROM
+        "dev"."raw".mappings m,
+        latest_mappings_partition p
+    WHERE
+        m.year = p.year
+        AND m.month = p.month
+        AND source_key = 'company_size'
+        AND data_source = 'pdl'
+)
+SELECT
+    DISTINCT f.year,
+    f.month,
+    job_company_location_country as country,
+    job_company_location_street_address as street_address,
+    job_company_location_region as
+region
+,
+    COALESCE(im.vector_value, f.job_company_industry) as industry,
+    job_company_location_locality as locality,
+    job_company_location_name as location_name,
+    job_company_name as name,
+    job_company_id as id,
+    job_company_website as domain,
+    job_company_location_metro as metro,
+    job_company_facebook_url as facebook_url,
+    COALESCE(LOWER(em.vector_value), LOWER(f.job_company_size)) as employee_count,
+    job_company_twitter_url as twitter_url,
+    job_company_location_address_line_2 as address_line_2,
+    job_company_location_continent as continent,
+    job_company_linkedin_url as linkedin_url,
+    job_company_location_geo as geo,
+    job_company_founded as founded,
+    job_company_location_postal_code as zip,
+    job_company_linkedin_id as linkedin_id,
+    dataset_version
+FROM
+    "dev"."raw".pdl_person f
+    JOIN latest_firm_partition fp ON f.year = fp.year
+    AND f.month = fp.month
+    LEFT JOIN latest_industry_mappings im ON LOWER(f.job_company_industry) = im.source_value
+    LEFT JOIN latest_employee_mappings em ON LOWER(f.job_company_size) = em.source_value
+WHERE
+    job_company_id != '' WITH NO SCHEMA BINDING;

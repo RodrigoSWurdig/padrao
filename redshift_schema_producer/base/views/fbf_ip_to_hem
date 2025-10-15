@@ -1,0 +1,21 @@
+CREATE
+OR REPLACE VIEW "dev"."base".fbf_ip_to_hem AS WITH latest_partition AS (
+    SELECT
+        year,
+        month
+    FROM
+        "dev"."raw".ip_to_hem
+    ORDER BY
+        year DESC,
+        month DESC
+    LIMIT
+        1
+)
+SELECT
+    a.*
+FROM
+    "dev"."raw".ip_to_hem a,
+    latest_partition b
+WHERE
+    a.year = b.year
+    AND a.month = b.month WITH NO SCHEMA BINDING;

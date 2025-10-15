@@ -1,0 +1,36 @@
+cubes:
+  - name: market_pulse_2_vup_20250825
+    sql_table: core.base.market_pulse_2_vup_20250825 # View
+
+    joins:
+      - name: universal_person
+        relationship: one_to_many
+        sql: '{CUBE}.vup_id = {universal_person}.id'
+    dimensions:
+      - name: pkey
+        sql: '{CUBE}.hem || ''-'' || {CUBE}.topic || ''-'' || {CUBE}.created_at'
+        type: string
+        primary_key: true
+      - name: vup_id
+        sql: vup_id
+        type: string
+        public: true
+      - name: id
+        sql: fbf_id
+        type: string
+      - name: sha256
+        sql: hem
+        type: string
+      - name: topic
+        sql: topic_old
+        type: string
+      - name: seen_on
+        sql: created_at
+        type: time
+    measures:
+      - name: frequency
+        type: count
+        sql: vup_id
+      - name: unique_ids
+        type: count_distinct
+        sql: vup_id

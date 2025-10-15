@@ -1,0 +1,59 @@
+cubes:
+  - name: market_pulse_weekly_rolling
+    sql_table: dev.derived.mv_market_pulse_weekly_vup_dist_topic_sort # Materialized View
+
+    joins:
+      - name: universal_person
+        relationship: one_to_many
+        sql: "{CUBE}.vup_id = {universal_person}.id"
+
+    dimensions:
+      - name: pkey
+        sql: "{CUBE}.vup_id || '-' || {CUBE}.topic_id"
+        type: string
+        primary_key: true
+      - name: vup_id
+        sql: vup_id
+        type: string
+        public: true
+      - name: topic_id
+        sql: topic_id
+        type: string
+        public: true
+      - name: freq
+        sql: freq
+        type: number
+        public: true
+
+    measures:
+      - name: total_frequency
+        type: sum
+        sql: freq
+        public: true
+      - name: unique_vup_ids
+        type: count_distinct
+        sql: vup_id
+        public: true
+      - name: unique_topics
+        type: count_distinct
+        sql: topic_id
+        public: true
+      - name: total_records
+        type: count
+        public: true
+      - name: avg_frequency
+        type: avg
+        sql: freq
+        public: true
+
+    # pre_aggregations:
+    #   - name: main
+    #     dimensions:
+    #       - market_pulse_weekly_rolling.vup_id
+    #       - market_pulse_weekly_rolling.topic_id
+    #     measures:
+    #       - market_pulse_weekly_rolling.total_frequency
+    #       - market_pulse_weekly_rolling.unique_vup_ids
+    #       - market_pulse_weekly_rolling.avg_frequency
+    #     refresh_key:
+    #       every: "1 hour"

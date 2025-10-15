@@ -1,0 +1,91 @@
+CREATE
+OR REPLACE VIEW derived.temp_vector_universal_job AS
+SELECT
+    "dev".base.fn_uuid() as vuj_id,
+    vup.vup_id,
+    vuc.vuc_id,
+    job_title,
+    fj.industry,
+    department,
+    seniority,
+    TIMESTAMP 'epoch' + job_last_updated * INTERVAL '1 second' AS job_last_updated,
+    '5x5' as data_source,
+    fj.dataset_version,
+    work_history
+FROM
+    "dev"."base".fbf_jobs fj
+    JOIN "dev"."derived".vector_universal_person vup ON vup.fbf_id = fj.id
+    JOIN "dev"."derived".vector_universal_company vuc ON vuc.fbf_id = fj.company_id
+WHERE
+    vup.fbf_id IS NOT NULL
+    AND vuc.fbf_id IS NOT NULL
+    AND vup.data_source = '5x5'
+UNION ALL
+SELECT
+    "dev".base.fn_uuid() as vuj_id,
+    vup.vup_id,
+NULL as
+    vuc_id,
+    job_title,
+    fj.industry,
+    department,
+    seniority,
+    TIMESTAMP 'epoch' + job_last_updated * INTERVAL '1 second' AS job_last_updated,
+    '5x5' as data_source,
+    fj.dataset_version,
+    work_history
+FROM
+    "dev"."base".fbf_jobs fj
+    JOIN "dev"."derived".vector_universal_person vup ON vup.fbf_id = fj.id
+WHERE
+    vup.fbf_id IS NOT NULL
+    AND (
+        fj.company_id = ''
+        OR fj.company_id IS NULL
+    )
+    AND vup.data_source = '5x5'
+UNION ALL
+SELECT
+    "dev".base.fn_uuid() as vuj_id,
+    vup.vup_id,
+    vuc.vuc_id,
+    job_title,
+    pj.industry,
+    department,
+    seniority,
+    job_last_verified:: TIMESTAMP as job_last_updated,
+    'pdl' as data_source,
+    pj.dataset_version,
+    '{["latest_job_start_date:"' || start_date || '}]' as work_history
+FROM
+    "dev"."base".pdl_jobs pj
+    JOIN "dev"."derived".vector_universal_person vup ON vup.pdl_id = pj.id
+    JOIN "dev"."derived".vector_universal_company vuc ON vuc.pdl_id = pj.company_id
+WHERE
+    vup.pdl_id IS NOT NULL
+    AND vuc.pdl_id IS NOT NULL
+    AND vup.data_source = 'pdl'
+UNION ALL
+SELECT
+    "dev".base.fn_uuid() as vuj_id,
+    vup.vup_id,
+NULL as
+    vuc_id,
+    job_title,
+    pj.industry,
+    department,
+    seniority,
+    job_last_verified:: TIMESTAMP as job_last_updated,
+    'pdl' as data_source,
+    pj.dataset_version,
+    '{["latest_job_start_date:"' || start_date || '}]' as work_history
+FROM
+    "dev"."base".pdl_jobs pj
+    JOIN "dev"."derived".vector_universal_person vup ON vup.pdl_id = pj.id
+WHERE
+    vup.pdl_id IS NOT NULL
+    AND (
+        pj.company_id = ''
+        OR pj.company_id IS NULL
+    )
+    AND vup.data_source = 'pdl' WITH NO SCHEMA BINDING;

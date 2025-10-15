@@ -1,0 +1,36 @@
+CREATE MATERIALIZED VIEW base.visitors DISTSTYLE KEY
+DISTKEY
+  (uuid)
+SORTKEY
+  (uuid) AS
+SELECT
+  id,
+  uuid,
+  created_at,
+  org,
+  ip_info,
+  first_name,
+  last_name,
+  email,
+  title,
+  company_name,
+  company_domain,
+  linkedin_url,
+  mobile_phone,
+  fbf_cc_id,
+  fbf_up_id,
+  pdl_id,
+  hem2upid_attempted_at,
+  is_us_geo,
+  ip2company_attempted_at,
+  company_linkedin_url,
+  external_id,
+  li_sha256,
+  fbf_sha256,
+  company_size,
+  seniority,
+  department,
+  industry,
+  id_source
+FROM
+  vectordb.public.visitors;

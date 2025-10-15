@@ -1,0 +1,132 @@
+CREATE
+OR REPLACE VIEW "dev"."base".pdl_jobs AS WITH latest_pdl_person_partition AS (
+    SELECT
+        year,
+        month
+    FROM
+        "dev"."raw".pdl_person
+    ORDER BY
+        year DESC,
+        month DESC
+    LIMIT
+        1
+), latest_pdl_seniority_partition AS (
+    SELECT
+        year,
+        month
+    FROM
+        "dev"."raw".pdl_job_title_level
+    ORDER BY
+        year DESC,
+        month DESC
+    LIMIT
+        1
+), latest_mappings_partition AS (
+    SELECT
+        year,
+        month
+    FROM
+        "dev"."raw".mappings
+    ORDER BY
+        year DESC,
+        month DESC
+    LIMIT
+        1
+), latest_industry_mappings AS (
+    SELECT
+        source_value,
+        vector_value
+    FROM
+        "dev"."raw".mappings m,
+        latest_mappings_partition p
+    WHERE
+        m.year = p.year
+        AND m.month = p.month
+        AND source_key = 'industry'
+        AND data_source = 'pdl'
+),
+latest_sub_role_mappings AS (
+    SELECT
+        source_value,
+        vector_value
+    FROM
+        "dev"."raw".mappings m,
+        latest_mappings_partition p
+    WHERE
+        m.year = p.year
+        AND m.month = p.month
+        AND source_key = 'job_title_sub_role'
+        AND data_source = 'pdl'
+),
+latest_role_mappings AS (
+    SELECT
+        source_value,
+        vector_value
+    FROM
+        "dev"."raw".mappings m,
+        latest_mappings_partition p
+    WHERE
+        m.year = p.year
+        AND m.month = p.month
+        AND source_key = 'job_title_role'
+        AND data_source = 'pdl'
+),
+latest_seniority_mappings AS (
+    SELECT
+        source_value,
+        vector_value
+    FROM
+        "dev"."raw".mappings m,
+        latest_mappings_partition p
+    WHERE
+        m.year = p.year
+        AND m.month = p.month
+        AND source_key = 'level'
+        AND data_source = 'pdl'
+)
+SELECT
+    f.year,
+    f.month,
+    work_email as business_email,
+    job_title,
+    COALESCE(im.vector_value, f.industry) as industry,
+    job_last_changed,
+    job_last_verified,
+    f.person_id as id,
+    job_company_id as company_id,
+    CASE
+    WHEN COALESCE(er.vector_value, f.job_title_role) = 'professional_service' THEN COALESCE(esr.vector_value, f.job_title_sub_role)
+    ELSE COALESCE(er.vector_value, f.job_title_role) END as department,
+    COALESCE(es.vector_value, sp.level) as seniority,
+    job_start_date as start_date,
+    dataset_version
+FROM
+    "dev"."raw".pdl_person f
+    JOIN latest_pdl_person_partition pp ON f.year = pp.year
+    AND f.month = pp.month
+    LEFT JOIN "dev"."raw".pdl_job_title_level sp ON f.person_id = sp.person_id
+    AND sp.year = (
+        SELECT
+            year
+        FROM
+            latest_pdl_seniority_partition
+    )
+    AND sp.month = (
+        SELECT
+            month
+        FROM
+            latest_pdl_seniority_partition
+    )
+    LEFT JOIN latest_industry_mappings im ON f.job_company_industry = im.source_value
+    LEFT JOIN latest_sub_role_mappings esr ON f.job_title_sub_role = esr.source_value
+    LEFT JOIN latest_role_mappings er ON f.job_title_role = er.source_value
+    LEFT JOIN latest_seniority_mappings es ON sp.level = es.source_value
+WHERE
+    (
+        job_title != ''
+        AND job_title IS NOT NULL
+    )
+    OR (
+        job_company_id != ''
+        AND job_company_id IS NOT NULL
+    ) WITH NO SCHEMA BINDING;

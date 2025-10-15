@@ -1,0 +1,14 @@
+CREATE MATERIALIZED VIEW "base".account_list_memberships AUTO REFRESH YES AS
+SELECT
+    id as id,
+    org as org,
+    account_list_id as account_list_id,
+    TRIM(LOWER(name)) as name,
+    TRIM(LOWER(domain)) as domain,
+    owner_email as owner_email,
+    source as source,
+    deal_stage as deal_stage,
+    account_stage as account_stage,
+    created_at as created_at
+FROM
+    vectordb.public.account_list_memberships;

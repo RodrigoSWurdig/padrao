@@ -1,0 +1,12 @@
+CREATE TABLE derived.vector_phone (
+    vup_id character varying(32) NOT NULL ENCODE lzo
+    distkey
+,
+        phone character varying(1240) NOT NULL ENCODE lzo,
+        phone_type character varying(32) NOT NULL ENCODE lzo,
+        data_source character varying(32) NOT NULL ENCODE lzo,
+        dataset_version character varying(32) NOT NULL ENCODE lzo,
+        PRIMARY KEY (vup_id)
+) DISTSTYLE AUTO
+SORTKEY
+    (vup_id);

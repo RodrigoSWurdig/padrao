@@ -1,0 +1,65 @@
+cubes:
+  - name: universal_job
+    sql_table: dev.derived.vector_universal_job # Table
+
+    joins:
+      - name: universal_company
+        relationship: one_to_many
+        sql: "{CUBE}.vuc_id = {universal_company}.vuc_id"
+
+    dimensions:
+      - name: id
+        sql: vuj_id
+        type: string
+        primary_key: true
+        public: true
+
+      - name: vup_id
+        sql: vup_id
+        type: string
+        primary_key: true
+
+      - name: vuc_id
+        sql: vuc_id
+        type: string
+        primary_key: true
+
+      - name: job_title
+        sql: job_title
+        type: string
+
+      - name: industry
+        sql: industry
+        type: string
+
+      - name: department
+        sql: department
+        type: string
+
+      - name: seniority
+        sql: seniority
+        type: string
+
+      - name: job_last_updated
+        sql: job_last_updated
+        type: string
+
+      - name: work_history
+        sql: work_history
+        type: string
+
+      - name: data_source
+        sql: data_source
+        type: string
+
+      - name: dataset_version
+        sql: dataset_version
+        type: string
+
+      - name: created_at
+        sql: created_at
+        type: string
+
+      - name: updated_at
+        sql: updated_at
+        type: string
