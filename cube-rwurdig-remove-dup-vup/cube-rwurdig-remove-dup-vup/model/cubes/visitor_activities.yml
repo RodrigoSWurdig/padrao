@@ -1,0 +1,74 @@
+cubes:
+  - name: visitor_activities
+    sql: 
+      SELECT 
+        va.*,
+        v.vup_id,
+        v.ip_info.city::varchar   AS visitor_city,
+        v.ip_info.region::varchar AS visitor_region
+      FROM base.visitor_activities va
+      LEFT JOIN base.visitors v
+        ON v."uuid" = va.visitor_uuid
+
+    joins:
+      - name: universal_person
+        sql: "{vup_id} = {universal_person.id}"
+        relationship: many_to_one
+    
+    dimensions:
+      - name: id
+        sql: id
+        type: number
+        primary_key: true
+      
+      - name: org
+        sql: org
+        type: number
+
+      - name: created_at
+        sql: created_at
+        type: time
+
+      - name: page_url
+        sql: page_url
+        type: string
+
+      - name: utm_source
+        sql: utm_source
+        type: string
+
+      - name: utm_medium
+        sql: utm_medium
+        type: string
+
+      - name: utm_campaign
+        sql: utm_campaign
+        type: string
+
+      - name: vup_id
+        sql: vup_id
+        type: string
+
+      - name: visitor_city
+        sql: visitor_city
+        type: string
+
+      - name: visitor_region
+        sql: visitor_region
+        type: string
+
+    measures:
+      - name: count
+        type: count
+
+      - name: distinct_visitors
+        type: count_distinct
+        sql: visitor_uuid
+
+      - name: distinct_people
+        type: count_distinct
+        sql: vup_id
+
+      - name: last_seen
+        type: time
+        sql: MAX(created_at)

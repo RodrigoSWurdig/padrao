@@ -1,0 +1,28 @@
+cubes:
+  - name: market_pulse_taxonomy
+    sql_table: dev.base.mv_market_pulse_taxonomy # Materialized View
+
+    pre_aggregations:
+      - name: main
+        dimensions:
+          - market_pulse_taxonomy.description
+          - market_pulse_taxonomy.topic_old
+      - name: topic_lookup
+        dimensions:
+          - market_pulse_taxonomy.id
+          - market_pulse_taxonomy.topic_old
+    dimensions:
+      - name: id
+        sql: topic_id
+        type: string
+        primary_key: true
+        public: true
+      - name: topic_new
+        sql: topic_new
+        type: string
+      - name: topic_old
+        sql: topic_old
+        type: string
+      - name: description
+        sql: description
+        type: string

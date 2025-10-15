@@ -1,0 +1,7 @@
+CREATE MATERIALIZED VIEW derived.mv_fbf_to_vup DISTSTYLE ALL AS (
+    SELECT
+        fbf_id,
+        vup_id
+    FROM
+        derived.vector_universal_person
+);

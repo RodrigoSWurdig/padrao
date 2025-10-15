@@ -1,0 +1,13 @@
+CREATE MATERIALIZED VIEW base.mv_market_pulse_taxonomy AS
+SELECT
+   mpt.topic_id as topic_id,
+   mpt.topic as topic_new,
+   CASE
+   WHEN cwalk.mp1_topic != ''
+   AND cwalk.mp1_topic IS NOT NULL THEN cwalk.mp1_topic
+   ELSE mpt.topic END as topic_old,
+   mpt.description as description
+FROM
+   base.market_pulse_2_taxonomy mpt
+   LEFT JOIN base.market_pulse_mp1_mp2_crosswalk cwalk ON cwalk.mp2_b2b_topic_id = mpt.topic_id
+   AND cwalk.mp1_topic != '';

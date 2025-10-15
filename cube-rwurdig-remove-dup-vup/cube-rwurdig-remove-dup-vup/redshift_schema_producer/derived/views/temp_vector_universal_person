@@ -1,0 +1,118 @@
+CREATE
+OR REPLACE VIEW derived.temp_vector_universal_person AS -- Part 1: Records with linkedin_url.
+-- If both are not null we test for match,
+-- If one is null we include the row through full outer join
+SELECT
+    "dev".base.fn_uuid() as vup_id,
+    f.id as fbf_id,
+    p.id as pdl_id,
+    COALESCE(p.linkedin_url, f.linkedin_url) as linkedin_url,
+    CASE
+    WHEN p.job_last_updated > f.job_last_updated THEN p.first_name
+    ELSE f.first_name END as first_name,
+    CASE
+    WHEN p.job_last_updated > f.job_last_updated THEN p.last_name
+    ELSE f.last_name END as last_name,
+    CASE
+    WHEN p.job_last_updated > f.job_last_updated THEN ''
+    ELSE f.street_address END as street_address,
+    CASE
+    WHEN p.job_last_updated > f.job_last_updated THEN ''
+    ELSE f.address_line_2 END as address_line_2,
+    CASE
+    WHEN p.job_last_updated > f.job_last_updated THEN p.locality
+    ELSE f.locality END as locality,
+    CASE
+    WHEN p.job_last_updated > f.job_last_updated THEN p.region
+    ELSE f.region END as
+region
+,
+    CASE
+    WHEN p.job_last_updated > f.job_last_updated THEN p.zip
+    ELSE f.zip END as zip,
+    CASE
+    WHEN p.job_last_updated > f.job_last_updated THEN p.country
+    ELSE f.country END as country,
+    CASE
+    WHEN p.job_last_updated > f.job_last_updated THEN p.gender
+    ELSE f.gender END as gender,
+    CASE
+    WHEN p.job_last_updated > f.job_last_updated THEN 'pdl'
+    ELSE '5x5' END as data_source,
+    CASE
+    WHEN p.job_last_updated > f.job_last_updated THEN p.dataset_version
+    ELSE f.dataset_version END as dataset_version
+FROM
+    "dev"."base".pdl_person p
+    INNER JOIN "dev"."base".fbf_person f ON p.linkedin_url = f.linkedin_url
+WHERE
+    p.linkedin_url IS NOT NULL
+    AND f.linkedin_url IS NOT NULL
+UNION ALL
+    -- Part 2: PDL Records without linkedin_url or linkedin_url not in FBF records
+SELECT
+    "dev".base.fn_uuid() as vup_id,
+NULL as
+    fbf_id,
+    p.id as pdl_id,
+NULL as
+    linkedin_url,
+    first_name,
+    last_name,
+    '' as street_address,
+    '' as address_line_2,
+    locality,
+region
+,
+    zip,
+    country,
+    gender,
+    'pdl' as data_source,
+    dataset_version
+FROM
+    "dev"."base".pdl_person p
+WHERE
+    linkedin_url IS NULL
+    OR (
+        linkedin_url IS NOT NULL
+        AND linkedin_url NOT IN (
+            SELECT
+                linkedin_url
+            FROM
+                base.fbf_person
+        )
+    )
+UNION ALL
+    -- Part 3: FBF Records without linkedin_url or linkedin_url not in PDL records
+SELECT
+    "dev".base.fn_uuid() as vup_id,
+    f.id,
+NULL as
+    pdl_id,
+NULL as
+    linkedin_url,
+    first_name,
+    last_name,
+    street_address,
+    address_line_2,
+    locality,
+region
+,
+    zip,
+    country,
+    gender,
+    '5x5' as data_source,
+    dataset_version
+FROM
+    "dev"."base".fbf_person f
+WHERE
+    linkedin_url IS NULL
+    OR (
+        linkedin_url IS NOT NULL
+        AND linkedin_url NOT IN (
+            SELECT
+                linkedin_url
+            FROM
+                base.pdl_person
+        )
+    ) WITH NO SCHEMA BINDING;

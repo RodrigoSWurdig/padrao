@@ -1,0 +1,21 @@
+CREATE
+OR REPLACE VIEW "dev"."base".fbf_visitors AS WITH latest_partition AS (
+    SELECT
+        y,
+        m
+    FROM
+        "dev"."raw".resolutions
+    ORDER BY
+        y DESC,
+        m DESC
+    LIMIT
+        1
+)
+SELECT
+    a.*
+FROM
+    "dev"."raw".resolutions a,
+    latest_partition b
+WHERE
+    a.y = b.y
+    AND a.m = b.m WITH NO SCHEMA BINDING;

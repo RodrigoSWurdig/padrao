@@ -1,0 +1,72 @@
+cubes:
+  - name: universal_company
+    sql_table: core.derived.vector_universal_company # Table
+
+    dimensions:
+      - name: id
+        sql: vuc_id
+        type: string
+        primary_key: true
+        public: true
+
+      - name: name
+        sql: name
+        type: string
+
+      - name: domain
+        sql: domain
+        type: string
+
+      - name: employee_count
+        sql: employee_count
+        type: string
+
+      - name: linkedin_url
+        sql: linkedin_url
+        type: string
+
+      - name: industry
+        sql: industry
+        type: string
+
+      - name: address_line_2
+        sql: address_line_2
+        type: string
+
+      - name: locality
+        sql: locality
+        type: string
+
+      - name: region
+        sql: region
+        type: string
+
+      - name: country
+        sql: country
+        type: string
+
+      - name: zip
+        sql: zip
+        type: string
+
+      - name: data_source
+        sql: data_source
+        type: string
+
+      - name: dataset_version
+        sql: dataset_version
+        type: string
+
+      - name: created_at
+        sql: created_at
+        type: string
+
+      - name: updated_at
+        sql: updated_at
+        type: string
+
+    measures:
+      - name: count
+        type: count_distinct
+        title: count
+        sql: "{CUBE.id}"

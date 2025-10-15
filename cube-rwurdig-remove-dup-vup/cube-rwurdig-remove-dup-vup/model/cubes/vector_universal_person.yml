@@ -1,0 +1,100 @@
+cubes:
+  - name: vector_universal_person
+    sql_table: public.vector_universal_person
+
+    joins:
+      - name: vup_linkedin_urls
+        sql: "{CUBE}.vup_id = {vup_linkedin_urls.vup_id}"
+        relationship: one_to_many
+
+      - name: vup_fbf_ids
+        sql: "{CUBE}.vup_id = {vup_fbf_ids.vup_id}"
+        relationship: one_to_many
+
+      - name: vup_pdl_ids
+        sql: "{CUBE}.vup_id = {vup_pdl_ids.vup_id}"
+        relationship: one_to_many
+
+      - name: vector_universal_job
+        sql: "{CUBE}.vup_id = {vector_universal_job.vup_id}"
+        relationship: one_to_many
+
+      - name: vector_emails
+        sql: "{CUBE}.vup_id = {vector_emails.vup_id}"
+        relationship: one_to_many
+
+    dimensions:
+      - name: vup_id
+        sql: vup_id
+        type: number
+        primary_key: true
+
+      - name: first_name
+        sql: first_name
+        type: string
+
+      - name: last_name
+        sql: last_name
+        type: string
+
+      - name: full_name
+        sql: full_name
+        type: string
+
+      - name: title
+        sql: title
+        type: string
+
+      - name: company
+        sql: company
+        type: string
+
+      - name: location
+        sql: location
+        type: string
+
+      - name: country
+        sql: country
+        type: string
+
+      - name: state
+        sql: state
+        type: string
+
+      - name: city
+        sql: city
+        type: string
+
+      - name: merged_into_vup_id
+        sql: merged_into_vup_id
+        type: number
+
+      - name: is_active
+        sql: "CASE WHEN merged_into_vup_id IS NULL THEN true ELSE false END"
+        type: boolean
+
+      - name: created_at
+        sql: created_at
+        type: time
+
+      - name: updated_at
+        sql: updated_at
+        type: time
+
+    measures:
+      - name: count
+        type: count
+
+      - name: active_count
+        type: count
+        filters:
+          - sql: "{CUBE}.merged_into_vup_id IS NULL"
+
+      - name: merged_count
+        type: count
+        filters:
+          - sql: "{CUBE}.merged_into_vup_id IS NOT NULL"
+
+    segments:
+      - name: active_persons
+        sql: "{CUBE}.merged_into_vup_id IS NULL"

@@ -1,0 +1,27 @@
+CREATE
+OR REPLACE VIEW derived.temp_vector_maids AS WITH parsed_maids AS (
+    SELECT
+        vup.vup_id,
+        fm.maids AS maids_array,
+        fm.dataset_version
+    FROM
+        "dev"."base".fbf_device_360 fm
+        JOIN "dev"."derived".vector_universal_person vup ON vup.fbf_id = fm.id
+    WHERE
+        maids != ''
+)
+SELECT
+    p.vup_id,
+    TRIM(
+        BOTH '"'
+        FROM
+            m:: text
+    ) AS maid,
+    CASE
+    WHEN LOWER(m:: text) = m THEN 'android'
+    ELSE 'ios' END AS maid_type,
+    '5x5' as data_source,
+    p.dataset_version
+FROM
+    parsed_maids p,
+    p.maids_array m WITH NO SCHEMA BINDING;

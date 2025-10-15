@@ -1,0 +1,8 @@
+CREATE TABLE base.market_pulse_2_taxonomy (
+    topic_id character varying(32) ENCODE raw,
+    topic character varying(256) ENCODE lzo,
+    description character varying(256) ENCODE lzo,
+    is_product boolean ENCODE raw
+) DISTSTYLE AUTO
+SORTKEY
+    (topic_id);

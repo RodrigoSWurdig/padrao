@@ -1,0 +1,20 @@
+CREATE OR REPLACE FUNCTION base.get_date_string_list(days_back integer)
+ RETURNS character varying(1000) LANGUAGE plpythonu
+ STABLE
+AS $$
+from datetime import datetime, timedelta
+
+def get_date_list(days_back):
+    today = datetime.now()
+    date_list = []
+    
+    for i in range(days_back + 1):
+        day = today - timedelta(days=i)
+        date_str = day.strftime("%Y%m%d")
+        date_list.append(date_str)
+    
+    # Join all dates with commas
+    return ','.join(date_list)
+
+return get_date_list(days_back)
+$$

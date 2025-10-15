@@ -1,0 +1,17 @@
+CREATE MATERIALIZED VIEW base.business_units AUTO REFRESH YES AS
+SELECT
+    id,
+    org,
+    TRIM(LOWER(name)) as name,
+    buyer_persona as buyer_persona,
+    tam as tam,
+    OBJECT(
+        'in_market',
+        intent_topics [ 0 ],
+        'competitor',
+        intent_topics [ 1 ],
+        'branded',
+        intent_topics [ 2 ]
+    ) as intent_topics
+FROM
+    vectordb.public.business_units;

@@ -1,0 +1,19 @@
+CREATE TABLE derived.vector_universal_job (
+    vuj_id character varying(32) ENCODE lzo,
+    vup_id character varying(32) ENCODE raw
+    distkey
+,
+        vuc_id character varying(32) ENCODE lzo,
+        job_title character varying(1024) ENCODE lzo,
+        industry character varying(1024) ENCODE lzo,
+        department character varying(1024) ENCODE bytedict,
+        seniority character varying(1024) ENCODE bytedict,
+        job_last_updated character varying(1024) ENCODE lzo,
+        data_source character varying(1024) ENCODE bytedict,
+        dataset_version character varying(1024) ENCODE bytedict,
+        work_history character varying(65535) ENCODE lzo,
+        created_at timestamp without time zone ENCODE az64,
+        updated_at timestamp without time zone ENCODE az64
+) DISTSTYLE KEY
+SORTKEY
+    (vup_id, vuc_id);

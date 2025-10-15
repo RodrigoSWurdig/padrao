@@ -1,0 +1,13 @@
+CREATE
+OR REPLACE VIEW base.market_pulse_2_vup_20250825 AS (
+  SELECT
+    mp.hem AS hem,
+    mp.fbf_id AS fbf_id,
+    mp.vup_id AS vup_id,
+    mp.created_at AS created_at,
+    mpt.topic_new AS topic,
+    mpt.topic_old AS topic_old
+  FROM
+    base.mv_market_pulse_2_20250825 AS mp
+    JOIN base.mv_market_pulse_taxonomy mpt ON mpt.topic_id = mp.topic_id
+) WITH NO SCHEMA BINDING;

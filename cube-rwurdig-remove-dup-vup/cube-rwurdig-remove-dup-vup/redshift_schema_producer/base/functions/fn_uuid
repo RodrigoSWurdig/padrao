@@ -1,0 +1,7 @@
+CREATE OR REPLACE FUNCTION base.fn_uuid()
+ RETURNS character varying LANGUAGE plpythonu
+ VOLATILE
+AS $$
+import uuid
+return str(uuid.uuid4().hex)
+$$

@@ -1,0 +1,110 @@
+CREATE
+OR REPLACE VIEW derived.temp_vector_universal_company AS
+SELECT
+    "dev".base.fn_uuid() as vuc_id,
+    f.id as fbf_id,
+    p.id as pdl_id,
+    COALESCE(p.linkedin_url, f.linkedin_url) as linkedin_url,
+    COALESCE(p.name, f.name) as name,
+    COALESCE(p.domain, f.domain) as domain,
+    COALESCE(p.employee_count, f.employee_count) as employee_count,
+    COALESCE(p.industry, f.industry) as industry,
+    COALESCE(p.street_address, f.street_address) as street_address,
+    CASE
+    WHEN p.street_address IS NOT NULL THEN p.address_line_2
+    ELSE f.address_line_2 END AS address_line_2,
+    CASE
+    WHEN p.street_address IS NOT NULL THEN p.locality
+    ELSE f.locality END AS locality,
+    CASE
+    WHEN p.street_address IS NOT NULL THEN p.region
+    ELSE f.region END AS
+region
+,
+    CASE
+    WHEN p.street_address IS NOT NULL THEN p.zip
+    ELSE f.zip END AS zip,
+    CASE
+    WHEN p.street_address IS NOT NULL THEN p.country
+    ELSE CASE
+    WHEN f.region is not null THEN 'united states'
+    ELSE '' END END as country,
+    CASE
+    WHEN f.related_domains IS NULL THEN CASE
+    WHEN twitter_url IS NULL THEN facebook_url
+    WHEN facebook_url IS NULL THEN twitter_url
+    ELSE twitter_url || ', ' || facebook_url END
+    ELSE CASE
+    WHEN twitter_url IS NULL THEN facebook_url || ', ' || f.related_domains
+    WHEN facebook_url IS NULL THEN twitter_url || ', ' || f.related_domains
+    ELSE twitter_url || ', ' || facebook_url || ', ' || f.related_domains END END AS related_domains,
+    CASE
+    WHEN p.linkedin_url IS NOT NULL
+    and f.linkedin_url IS NOT NULL THEN 'pdl,5x5'
+    ELSE CASE
+    WHEN p.linkedin_url IS NOT NULL THEN 'pdl'
+    ELSE '5x5' END END as data_source,
+    CASE
+    WHEN p.linkedin_url IS NOT NULL THEN p.dataset_version
+    ELSE f.dataset_version END as dataset_version
+FROM
+    "dev"."base".pdl_companies p
+    FULL OUTER JOIN "dev"."base".fbf_companies f ON p.linkedin_url = f.linkedin_url
+WHERE
+    COALESCE(p.linkedin_url, f.linkedin_url) IS NOT NULL -- Part 2: PDL Records without linkedin_url
+UNION ALL
+SELECT
+    "dev".base.fn_uuid() as vuc_id,
+NULL as
+    fbf_id,
+    id as pdl_id,
+NULL as
+    linkedin_url,
+    name,
+    domain,
+    employee_count,
+    industry,
+    street_address,
+    address_line_2,
+    locality,
+region
+,
+    zip,
+    country,
+    CASE
+    WHEN twitter_url IS NULL THEN facebook_url
+    WHEN facebook_url IS NULL THEN twitter_url
+    ELSE twitter_url || ', ' || facebook_url END as related_domains,
+    'pdl' AS data_source,
+    dataset_version
+FROM
+    "dev"."base".pdl_companies
+WHERE
+    linkedin_url IS NULL
+UNION ALL
+SELECT
+    "dev".base.fn_uuid() as vuc_id,
+    id as fbf_id,
+NULL as
+    pdl_id,
+NULL as
+    linkedin_url,
+    name,
+    domain,
+    employee_count,
+    industry,
+    street_address,
+    address_line_2,
+    locality,
+region
+,
+    zip,
+NULL as
+    country,
+    related_domains,
+    '5x5' AS data_source,
+    dataset_version
+FROM
+    "dev"."base".fbf_companies
+WHERE
+    linkedin_url IS NULL WITH NO SCHEMA BINDING;

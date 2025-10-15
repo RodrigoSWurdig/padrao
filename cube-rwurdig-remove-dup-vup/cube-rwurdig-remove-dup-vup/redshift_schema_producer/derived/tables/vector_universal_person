@@ -1,0 +1,25 @@
+CREATE TABLE derived.vector_universal_person (
+    vup_id character varying(32) NOT NULL ENCODE raw
+    distkey
+,
+        fbf_id character varying(256) ENCODE lzo,
+        pdl_id character varying(256) ENCODE lzo,
+        linkedin_url character varying(1024) ENCODE lzo,
+        first_name character varying(1024) ENCODE lzo,
+        last_name character varying(1024) ENCODE lzo,
+        street_address character varying(1024) ENCODE lzo,
+        address_line_2 character varying(1024) ENCODE lzo,
+        locality character varying(1024) ENCODE lzo,
+    region
+        character varying(1024) ENCODE lzo,
+        zip character varying(1024) ENCODE lzo,
+        country character varying(1024) ENCODE lzo,
+        gender character varying(1024) ENCODE lzo,
+        data_source character varying(1024) ENCODE lzo,
+        dataset_version character varying(1024) ENCODE lzo,
+        created_at timestamp without time zone DEFAULT ('now':: character varying):: timestamp with time zone ENCODE az64,
+        updated_at timestamp without time zone DEFAULT ('now':: character varying):: timestamp with time zone ENCODE az64,
+        PRIMARY KEY (vup_id)
+) DISTSTYLE KEY
+SORTKEY
+    (vup_id);

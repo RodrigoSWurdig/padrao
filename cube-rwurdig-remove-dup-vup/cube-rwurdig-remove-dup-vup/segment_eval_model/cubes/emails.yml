@@ -1,0 +1,35 @@
+cubes:
+  - name: emails
+    sql_table: core.derived.vector_email # Table
+
+    joins:
+      - name: universal_person
+        relationship: many_to_one
+        sql: "{CUBE}.vup_id = {universal_person}.vup_id"
+
+    dimensions:
+      - name: id
+        sql: vup_id
+        type: string
+        primary_key: true
+        public: true
+
+      - name: sha256
+        sql: sha256
+        type: string
+
+      - name: email
+        sql: email
+        type: string
+
+      - name: email_type
+        sql: email_type
+        type: string
+
+      - name: data_source
+        sql: data_source
+        type: string
+
+      - name: dataset_version
+        sql: dataset_version
+        type: string

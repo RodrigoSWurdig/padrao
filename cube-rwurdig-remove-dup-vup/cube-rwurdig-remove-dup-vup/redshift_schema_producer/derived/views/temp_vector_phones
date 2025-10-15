@@ -1,0 +1,102 @@
+CREATE
+OR REPLACE VIEW derived.temp_vector_phones AS WITH parsed_personal_phone AS (
+    SELECT
+        vup.vup_id,
+        fp.personal_phone AS personal_phone_array,
+        fp.dataset_version
+    FROM
+        "dev"."base"."fbf_person" fp
+        JOIN "dev"."derived".vector_universal_person vup ON vup.fbf_id = fp.id
+    WHERE
+        personal_phone IS NOT NULL
+),
+parsed_direct_number AS (
+    SELECT
+        vup.vup_id,
+        fp.direct_number AS direct_number_array,
+        fp.dataset_version
+    FROM
+        "dev"."base"."fbf_person" fp
+        JOIN "dev"."derived".vector_universal_person vup ON vup.fbf_id = fp.id
+    WHERE
+        direct_number IS NOT NULL
+),
+parsed_company_phone AS (
+    SELECT
+        vuj.vup_id,
+        fc.phone AS company_phone_array,
+        fc.dataset_version
+    FROM
+        "dev"."base"."fbf_companies" fc
+        JOIN derived.vector_universal_company vuc ON fc.id = vuc.fbf_id
+        JOIN derived.vector_universal_job vuj ON vuj.vuc_id = vuc.vuc_id
+    WHERE
+        fc.phone IS NOT NULL
+        AND vuc.data_source = '5x5'
+        AND vuj.data_source = '5x5'
+)
+SELECT
+    vup_id,
+    TRIM (
+        BOTH
+        FROM
+            TRIM (
+                BOTH '"'
+                FROM
+                    ppa:: text
+            )
+    ) AS phone,
+    'personal' as phone_type,
+    '5x5' as data_source,
+    ppp.dataset_version
+FROM
+    parsed_personal_phone ppp,
+    ppp.personal_phone_array ppa
+UNION ALL
+SELECT
+    vup_id,
+    TRIM (
+        BOTH
+        FROM
+            TRIM (
+                BOTH '"'
+                FROM
+                    dna:: text
+            )
+    ) AS phone,
+    'direct' as phone_type,
+    '5x5' as data_source,
+    dataset_version
+FROM
+    parsed_direct_number pdn,
+    pdn.direct_number_array dna
+UNION ALL
+SELECT
+    vup_id,
+    TRIM (
+        BOTH
+        FROM
+            TRIM (
+                BOTH '"'
+                FROM
+                    cpa:: text
+            )
+    ) as phone,
+    'general_comapany_phone' as phone_type,
+    '5x5' as data_source,
+    dataset_version
+FROM
+    parsed_company_phone pcp,
+    pcp.company_phone_array cpa
+UNION ALL
+SELECT
+    vup_id,
+    mobile_phone as phone,
+    'mobile' as phone_type,
+    '5x5' as data_source,
+    fp.dataset_version
+FROM
+    "dev"."base"."fbf_person" fp
+    JOIN derived.vector_universal_person vup ON fp.id = vup.fbf_id
+WHERE
+    fp.mobile_phone IS NOT NULL WITH NO SCHEMA BINDING;

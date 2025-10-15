@@ -1,0 +1,80 @@
+CREATE OR REPLACE FUNCTION base.get_state_abbreviation(state_name character varying)
+ RETURNS character varying LANGUAGE plpythonu
+ STABLE
+AS $$
+    # Input validation
+    if state_name is None:
+        return None
+    
+    # Clean and lowercase the input
+    clean_input = state_name.strip().lower()
+    
+    # If input is already a 2-letter code, return it as lowercase
+    if len(clean_input) == 2:
+        return clean_input
+    
+    # Dictionary mapping state names to abbreviations
+    state_map = {
+        'alabama': 'al',
+        'alaska': 'ak',
+        'arizona': 'az',
+        'arkansas': 'ar',
+        'california': 'ca',
+        'colorado': 'co',
+        'connecticut': 'ct',
+        'delaware': 'de',
+        'florida': 'fl',
+        'georgia': 'ga',
+        'hawaii': 'hi',
+        'idaho': 'id',
+        'illinois': 'il',
+        'indiana': 'in',
+        'iowa': 'ia',
+        'kansas': 'ks',
+        'kentucky': 'ky',
+        'louisiana': 'la',
+        'maine': 'me',
+        'maryland': 'md',
+        'massachusetts': 'ma',
+        'michigan': 'mi',
+        'minnesota': 'mn',
+        'mississippi': 'ms',
+        'missouri': 'mo',
+        'montana': 'mt',
+        'nebraska': 'ne',
+        'nevada': 'nv',
+        'new hampshire': 'nh',
+        'new jersey': 'nj',
+        'new mexico': 'nm',
+        'new york': 'ny',
+        'north carolina': 'nc',
+        'north dakota': 'nd',
+        'ohio': 'oh',
+        'oklahoma': 'ok',
+        'oregon': 'or',
+        'pennsylvania': 'pa',
+        'rhode island': 'ri',
+        'south carolina': 'sc',
+        'south dakota': 'sd',
+        'tennessee': 'tn',
+        'texas': 'tx',
+        'utah': 'ut',
+        'vermont': 'vt',
+        'virginia': 'va',
+        'washington': 'wa',
+        'west virginia': 'wv',
+        'wisconsin': 'wi',
+        'wyoming': 'wy',
+        'district of columbia': 'dc',
+        'american samoa': 'as',
+        'guam': 'gu',
+        'northern mariana islands': 'mp',
+        'puerto rico': 'pr',
+        'united states virgin islands': 'vi',
+        'u.s. virgin islands': 'vi',
+        'virgin islands': 'vi'
+    }
+    
+    # Return abbreviation if found, otherwise return original value in lowercase
+    return state_map.get(clean_input, clean_input)
+$$

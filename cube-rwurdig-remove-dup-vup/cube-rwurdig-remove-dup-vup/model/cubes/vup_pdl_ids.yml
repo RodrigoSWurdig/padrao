@@ -1,0 +1,26 @@
+cubes:
+  - name: vup_pdl_ids
+    sql_table: public.vup_pdl_ids
+
+    joins:
+      - name: vector_universal_person
+        sql: "{CUBE}.vup_id = {vector_universal_person.vup_id}"
+        relationship: many_to_one
+
+    dimensions:
+      - name: vup_id
+        sql: vup_id
+        type: number
+
+      - name: pdl_id
+        sql: pdl_id
+        type: string
+        primary_key: true
+
+      - name: created_at
+        sql: created_at
+        type: time
+
+    measures:
+      - name: count
+        type: count

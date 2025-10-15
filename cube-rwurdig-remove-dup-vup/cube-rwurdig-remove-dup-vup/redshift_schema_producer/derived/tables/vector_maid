@@ -1,0 +1,12 @@
+CREATE TABLE derived.vector_maid (
+    vup_id character varying(32) NOT NULL ENCODE lzo
+    distkey
+,
+        maid character varying(64) NOT NULL ENCODE lzo,
+        maid_type character varying(32) NOT NULL ENCODE lzo,
+        data_source character varying(32) NOT NULL ENCODE lzo,
+        dataset_version character varying(32) NOT NULL ENCODE lzo,
+        PRIMARY KEY (vup_id)
+) DISTSTYLE AUTO
+SORTKEY
+    (vup_id);

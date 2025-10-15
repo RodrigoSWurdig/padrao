@@ -1,0 +1,21 @@
+CREATE
+OR REPLACE VIEW "dev"."base".fbf_email_validation AS WITH latest_partition AS (
+    SELECT
+        year,
+        month
+    FROM
+        "dev"."raw".email_validation
+    ORDER BY
+        year DESC,
+        month DESC
+    LIMIT
+        1
+)
+SELECT
+    a.*
+FROM
+    "dev"."raw".email_validation a,
+    latest_partition b
+WHERE
+    a.year = b.year
+    AND a.month = b.month WITH NO SCHEMA BINDING;

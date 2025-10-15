@@ -1,0 +1,27 @@
+CREATE
+OR REPLACE VIEW "dev"."base".fbf_device_360 AS WITH latest_partition AS (
+    SELECT
+        year,
+        month
+    FROM
+        "dev"."raw".device_360
+    ORDER BY
+        year DESC,
+        month DESC
+    LIMIT
+        1
+)
+SELECT
+    a.up_id as id,
+    NULLIF(bito_ids, '') as bito_ids,
+    CASE
+    WHEN maids != '' THEN JSON_PARSE(maids)
+    ELSE NULL END AS maids,
+    NULLIF(ip_addresses, '') as ip_addresses,
+    a.year || '-' || a.month as dataset_version
+FROM
+    "dev"."raw".device_360 a,
+    latest_partition b
+WHERE
+    a.year = b.year
+    AND a.month = b.month WITH NO SCHEMA BINDING;

@@ -1,0 +1,25 @@
+CREATE
+OR REPLACE VIEW "dev"."base".fbf_up_to_hem AS WITH latest_partition AS (
+    SELECT
+        year,
+        month
+    FROM
+        "dev"."raw".up_to_hem
+    ORDER BY
+        year DESC,
+        month DESC
+    LIMIT
+        1
+)
+SELECT
+    a.up_id as id,
+    a.sha256_lc_hem as sha256,
+    a.md5_lc_hem as md5,
+    a.sha1_lc_hem as sha1,
+    a.year || '-' || a.month as dataset_version
+FROM
+    "dev"."raw".up_to_hem a,
+    latest_partition b
+WHERE
+    a.year = b.year
+    AND a.month = b.month WITH NO SCHEMA BINDING;

@@ -1,0 +1,126 @@
+CREATE
+OR REPLACE VIEW derived.temp_vector_emails AS WITH person_emails AS (
+    SELECT
+        vup_id,
+        business_email as business_email,
+        personal_emails as personal_email
+    FROM
+        "dev"."raw".universal_person up
+        JOIN derived.vector_universal_person vup ON up.up_id = vup.fbf_id
+    WHERE
+        year = '2024'
+        AND month = '12'
+        AND (
+            business_email IS NOT NULL
+            OR personal_email IS NOT NULL
+        )
+)
+SELECT
+    vup_id,
+    sha256 as sha256,
+    business_email as email,
+    'business' as email_type,
+    '5x5' as data_source,
+    ffel.dataset_version
+FROM
+    person_emails pe
+    JOIN base.fbf_full_email_list ffel ON pe.business_email = ffel.email_address
+WHERE
+    business_email IS NOT NULL
+    AND ffel.is_email_personal = FALSE
+UNION ALL
+SELECT
+    vup_id,
+    sha256 as sha256,
+    personal_email as email,
+    'personal' as email_type,
+    '5x5' as data_source,
+    ffel.dataset_version
+FROM
+    person_emails pe
+    JOIN base.fbf_full_email_list ffel ON pe.personal_email = ffel.email_address
+WHERE
+    personal_email IS NOT NULL
+    AND ffel.is_email_personal = TRUE
+UNION ALL
+SELECT
+NULL AS
+    vup_id,
+    sha256 as sha256,
+    email_address as email,
+    'personal' as email_type,
+    '5x5' as data_source,
+    ffel.dataset_version
+FROM
+    base.fbf_full_email_list ffel
+WHERE
+    email_address NOT IN (
+        SELECT
+            personal_email
+        FROM
+            person_emails
+        WHERE
+            personal_email IS NOT NULL
+    )
+    AND ffel.is_email_personal = TRUE
+UNION ALL
+SELECT
+NULL AS
+    vup_id,
+    sha256,
+    email_address as email,
+    'unknown' as email_type,
+    '5x5' as data_source,
+    ffel.dataset_version
+FROM
+    base.fbf_full_email_list ffel
+WHERE
+    email_address NOT IN (
+        SELECT
+            business_email
+        FROM
+            person_emails
+        WHERE
+            business_email IS NOT NULL
+    )
+    AND ffel.is_email_personal = FALSE
+UNION ALL
+SELECT
+NULL AS
+    vup_id,
+    sha256,
+    email,
+    'unknown' as email_type,
+    'live-intent' as data_source,
+    dataset_version
+FROM
+    base.live_intent
+UNION ALL
+SELECT
+    vup.vup_id as vup_id,
+    uh.sha256 as sha256,
+NULL as
+    email,
+    'unknown' as email_type,
+    '5x5' as data_source,
+    uh.dataset_version
+FROM
+    base.fbf_up_to_hem uh
+    JOIN derived.vector_universal_person vup ON uh.id = vup.fbf_id
+WHERE
+    NOT EXISTS (
+        SELECT
+            ffel.sha256
+        FROM
+            base.fbf_full_email_list ffel
+        WHERE
+            uh.sha256 = ffel.sha256
+    )
+    AND NOT EXISTS (
+        SELECT
+            li.sha256
+        FROM
+            base.live_intent li
+        WHERE
+            uh.sha256 = li.sha256
+    ) WITH NO SCHEMA BINDING;
